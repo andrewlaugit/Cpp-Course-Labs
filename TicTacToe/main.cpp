@@ -1,20 +1,19 @@
-//Andrew Lau
-//Lab2 - tictactoe game with graphics
 //
 //  main.cpp
 //  TicTacTo
 //
-//  Skeleton Code created by Tarek Abdelrahman on 2018-05-15.
+//  Created by Tarek Abdelrahman on 2018-05-15.
+//  Copyright © 2018 Tarek Abdelrahman. All rights reserved.
 //
 
 #include <SFML/Graphics.hpp>
 #include <iostream>
 
-//#include <tic-tac-toe/playMove.h> //change back when submitting
-#include "playMove.h"
+#include <tic-tac-toe/playMove.h>
 
 using namespace std;
 using namespace sf;
+
 
 int main() {
 
@@ -26,19 +25,23 @@ int main() {
     // Make sure to initalize the variables
 
     // The game board array
-    int gameBoard[3][3] = {Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty};;
+    int gameBoard[3][3] = {Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty,Empty};
 
     // An boolean that represents the turn in the game
-    bool turn=true; //true = X , false = O 
+    bool turn=true; //true = X , false = O
 
     // A boolean to represent if the move is valid
     bool validMove=false; //true if valid, false if invalid
-
+    
     // A boolean to represent if the game is over
-    bool is_game_over = false; //false if not game over
+    bool is_game_over = false;
 
     // An integer that represents the win code
     int winCode=0;
+    
+    //2 integers that represent the row and column input
+    int row, col;
+
 
     /************************************************************************************************************/
     /* Insert code that loads the various images used by the game and creates the sprites                       */
@@ -50,21 +53,21 @@ int main() {
     if (!X_texture.loadFromFile("X.jpg")) {
         return EXIT_FAILURE;
     }
-    sf::Sprite X_sprite(X_texture);
 
     // Get the O image
-    sf::Texture O_texture
-    if (!Y_texture.loadFromFile("O.jpg")) {
+    sf::Texture O_texture;
+    if (!O_texture.loadFromFile("O.jpg")) {
         return EXIT_FAILURE;
     }
-    sf::Sprite O_sprite(O_texture);
     
     // Get the blank image
-    sf::Texture blank_texture
-    if (!Y_texture.loadFromFile("blank.jpg")) {
+    sf::Texture blank_texture;
+    if (!blank_texture.loadFromFile("blank.jpg")) {
         return EXIT_FAILURE;
     }
-    sf::Sprite blank_sprite(blank_texture);
+    
+    //creates an array of sprites for each square on board
+    sf::Sprite spriteArray[3][3];
 
     /************************************************************************************************************/
     /* Insert code that creates the window and displays it                                                      */
@@ -87,38 +90,44 @@ int main() {
 
     // Create the main window: it has a title bar and a close button, but is not resizable
     sf::RenderWindow window(sf::VideoMode(windowSize, windowSize), "ECE244 Tic-Tac-Toe", sf::Style::Titlebar | sf::Style::Close);
-
+    
     // Set the Icon that appears in the task bar when the window is minimized
     // Insert you code here, see the lab handout
-    sf::Image windowIcon
-    if (!windowIcon.loadFromFile("icon.jpg")) {
+    sf::Image windowIcon;
+    if (!windowIcon.loadFromFile("icon.jpg")){
         return EXIT_FAILURE;
     }
-    windowIcon.setIcon(windowIcon.getSize().x, windowIcon.getSize().y, windowIcon.getPixelsPtr());
-
+    window.setIcon(windowIcon.getSize().x, windowIcon.getSize().y, windowIcon.getPixelsPtr());
+    
+    /************************************************************************************************************/
+    /* This sets up the settings/positions for border lines and sprites                                                              */
+    /************************************************************************************************************/    
+    
     // Create the horizonal (vertical) borders as rectangles of sizes barWidth and barHeight (berHeight and barWidth)
     // Insert your code here
-
-    //horizontal bar between row o and 1
-    sf:RectangleShape horBar01 (sf::Vector2f(barHeight, barWidth));
-    horBar01.setPostion(0, tileSize);
-    horBar01.setFillColor(sf::Color(0,0,0));
-
-    //horizontal bar between row 1 and 2
-    sf:RectangleShape horBar12 (sf::Vector2f(barHeight, barWidth));
-    horBar12.setPostion(0,(tileSize*2)+barHeight);
-    horBar12.setFillColor(sf::Color(0,0,0));
-
-    //vertical bar between col 0 and 1
-    sf:RectangleShape vertBar01 (sf::Vector2f(barWidth, barHeight));
-    vertBar01.setPostion(tileSize,0);
-    vertBar01.setFillColor(sf::Color(0,0,0));
-
-    //vertical bar between col 0 and 1
-    sf:RectangleShape vertBar12 (sf::Vector2f(barWidth, barHeight));
-    vertBar12.setPostion((tileSize*2)+barHeight,0);
-    vertBar12.setFillColor(sf::Color(0,0,0));    
-
+    sf::RectangleShape gridBarsArray[4];
+    
+    for(int i=0;i<4;i++){
+        gridBarsArray[i].setSize(sf::Vector2f(barWidth,barHeight));
+        gridBarsArray[i].setFillColor(sf::Color::Black);
+        if(i%2==0){
+            //index 0 and 2 are horizontal grid bars
+            gridBarsArray[i].setPosition(sf::Vector2f(0,tileSize*(i/2+1)+barWidth*(i/2+1)));
+            gridBarsArray[i].setRotation(270);
+        } else {
+            //index 1 and 3 are vertical grid bars
+            gridBarsArray[i].setPosition(sf::Vector2f(tileSize*(i/2+1)+barWidth*(i/2),0));
+        }
+    }
+    
+    //Set position and texture to blank sprite as default
+    for(int i=0; i<3;i++){
+        for(int j=0; j<3;j++){
+            spriteArray[i][j].setTexture(blank_texture);
+            spriteArray[i][j].setPosition(sf::Vector2f((tileSize*j)+barWidth*j,(tileSize*i)+barWidth*i));
+        }   
+    }  
+    
     /************************************************************************************************************/
     /* This is the main event loop of the code                                                                  */
     /************************************************************************************************************/
@@ -147,20 +156,24 @@ int main() {
             if (event.type == sf::Event::MouseButtonPressed && event.mouseButton.button == sf::Mouse::Left) {
                 // left mouse button is pressed: get the coordinates in pixels
                 // Insert your code to get the coordinates here
+                sf::Vector2i clickPosition = Mouse::getPosition(window);
 
                 // Convert the pixel coordinates into game board rows and columns
                 // Just divide by tileSize
                 // Observe that the x axis is the rows and the y axis is the columns
                 // Also make sure that row and column values are valid
                 // Insert your code below
+                row = clickPosition.y/tileSize;
+                col = clickPosition.x/tileSize;
 
 
                 // Play the move by calling the playMove function
                 // Insert your code below
+                playMove(gameBoard,row,col,turn,validMove,is_game_over,winCode);
             }
         }
 
-        // Insert code to draw the blank tiles using the blank sprite created earlier
+        // Insert code to draw the tiles using the sprites created earlier
         // You must determine the position of each cell on the grid, taking into account the width of
         // the border and then position the sprite there and draw it.
         // Draw the entire board, cell borders included,
@@ -170,7 +183,66 @@ int main() {
         // The fill of this rectangle should be white
 
         // Insert your code here
-
+        for(int i=0;i<3;i++){
+            for(int j=0;j<3;j++){
+                switch (gameBoard[i][j]){
+                    case 0:
+                        spriteArray[i][j].setTexture(blank_texture);
+                        break;
+                    case X:
+                        spriteArray[i][j].setTexture(X_texture);
+                        break;
+                    case O:
+                        spriteArray[i][j].setTexture(O_texture);
+                        break;
+                }
+                window.draw(spriteArray[i][j]);
+            }
+        }
+        for(int i=0;i<4;i++){
+            window.draw(gridBarsArray[i]);
+        }
+        
+        //create rectangle for line showing win
+        if(winCode!=0){
+            sf::RectangleShape winLine(sf::Vector2f(windowSize,10));
+            winLine.setFillColor(sf::Color::White);
+            switch (winCode){
+                case 1:
+                    winLine.setPosition(sf::Vector2f(0, tileSize/2));
+                    break;
+                case 2:
+                    winLine.setPosition(sf::Vector2f(0, tileSize*3/2+barWidth));
+                    break;
+                case 3:
+                    winLine.setPosition(sf::Vector2f(0, tileSize*5/2+barWidth*2));
+                    break;
+                case 4:
+                    winLine.setPosition(sf::Vector2f(tileSize/2, 0));
+                    winLine.setRotation(90);
+                    break;
+                case 5:
+                    winLine.setPosition(sf::Vector2f(tileSize*3/2+barWidth, 0));
+                    winLine.setRotation(90);
+                    break;
+                case 6:
+                    winLine.setPosition(sf::Vector2f(tileSize*5/2+barWidth*2, 0));
+                    winLine.setRotation(90);
+                    break;
+                case 7:
+                    winLine.setSize(sf::Vector2f(2*windowSize, 10));
+                    winLine.setPosition(sf::Vector2f(0,0));
+                    winLine.setRotation(45);
+                    break;
+                case 8:
+                    winLine.setSize(sf::Vector2f(2*windowSize, 10));
+                    winLine.setPosition(sf::Vector2f(tileSize*3+2*barWidth,0));
+                    winLine.setRotation(135);
+                    break;
+            }
+            window.draw(winLine);
+        }
+        
         // Display to the window
         window.display();
     }

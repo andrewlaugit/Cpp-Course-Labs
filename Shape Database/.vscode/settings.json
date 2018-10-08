@@ -1,0 +1,17 @@
+{
+    "files.associations": {
+        "type_traits": "cpp",
+        "utility": "cpp",
+        "xmemory0": "cpp",
+        "xtr1common": "cpp",
+        "xutility": "cpp",
+        "system_error": "cpp",
+        "xlocale": "cpp",
+        "ostream": "cpp",
+        "xiosbase": "cpp",
+        "iosfwd": "cpp",
+        "xstring": "cpp",
+        "iostream": "cpp",
+        "istream": "cpp"
+    }
+}

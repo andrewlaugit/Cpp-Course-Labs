@@ -29,6 +29,7 @@ int max_shapes;
 
 shape** createDatabase(int size);
 bool goodInput(stringstream& lstream);
+bool goodForLastInput(stringstream & lstream);
 bool inputIsDone(stringstream& lstream);
 bool validName(string name);
 int findNameLocation(string name);
@@ -94,7 +95,7 @@ int main() {
                         lineStream >> yLocInput; 
                         if(goodInput(lineStream)){
                             lineStream >> xSizeInput;
-                            if(goodInput(lineStream)){
+                            if(goodInput(lineStream) && goodForLastInput(lineStream)){
                                 lineStream >> ySizeInput;
                                 if(inputIsDone(lineStream)){
                                     createShape(nameInput,typeInput,xLocInput,yLocInput,xSizeInput,ySizeInput);
@@ -108,16 +109,16 @@ int main() {
             lineStream >> nameInput;
             if(goodInput(lineStream)){
                 lineStream >> xLocInput;
-                if(goodInput(lineStream)){
-                    lineStream >> yLocInput; 
-                    if(inputIsDone(lineStream)){
-                        moveShape(nameInput,xLocInput,yLocInput);
-                    }
+                if(goodInput(lineStream) && goodForLastInput(lineStream)){
+                    lineStream >> yLocInput;
+                        if(inputIsDone(lineStream)){
+                            moveShape(nameInput,xLocInput,yLocInput);
+                        }
                 }
             }
         } else if (command == "rotate"){
             lineStream >> nameInput;
-            if(goodInput(lineStream)){
+            if(goodInput(lineStream) && goodForLastInput(lineStream)){
                 lineStream >> rotateInput;
                 if(inputIsDone(lineStream)){
                     rotateShape(nameInput,rotateInput);
@@ -259,6 +260,15 @@ bool goodInput(stringstream& lstream){
     }
     return true;
 }
+bool goodForLastInput(stringstream & lstream){
+    while(lstream.peek() == ' ')
+        lstream.ignore(1,' ');
+    if(lstream.eof()){
+        printTooFewArguments();
+        return false;
+    }
+    return true;
+}
 bool inputIsDone(stringstream& lstream){
     if (lstream.fail()){
         printInvalidArgument();
@@ -266,7 +276,7 @@ bool inputIsDone(stringstream& lstream){
     }
     while(lstream.peek() == ' ')
         lstream.ignore(1,' ');
-    if(lstream.peek()==EOF){
+    if(lstream.eof()){
         return true;
     }else{
         printTooManyArguments();

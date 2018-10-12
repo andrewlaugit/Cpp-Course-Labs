@@ -1,0 +1,6 @@
+maxShapes 1
+
+create my rectangle 4 4 4 4
+
+delete my
+

@@ -30,16 +30,17 @@ int max_shapes;
 shape** createDatabase(int size);
 bool goodInput(stringstream& lstream);
 bool goodForLastInput(stringstream & lstream);
+bool goodLastInput(stringstream& lstream);
 bool inputIsDone(stringstream& lstream);
 bool validName(string name);
 int findNameLocation(string name);
 bool validType(string type);
 bool validNum(int numInput, int numType);
-void createShape(string n, string t, int xLoc, int yLoc, int xSize, int ySize);
-void moveShape(string nameInput,int xLocInput,int yLocInput);
-void rotateShape(string nameInput,int rotateInput);
-void drawShape(string nameInput);
-void deleteShape(string nameInput);
+void createShape(stringstream& lstream);
+void moveShape(stringstream& lstream);
+void rotateShape(stringstream& lstream);
+void drawShape(stringstream& lstream);
+void deleteShape(stringstream& lstream);
 
 //error messages
 void printInvalidCommand();
@@ -59,9 +60,6 @@ int main() {
 
     string line;
     string command;
-
-    string nameInput, typeInput;
-    int xLocInput, yLocInput, xSizeInput, ySizeInput,rotateInput;
     
     cout << "> ";         // Prompt for input
     getline(cin, line);   // Get a line from standard input
@@ -77,72 +75,36 @@ int main() {
 
         // Check for the command and act accordingly
         // ECE244 Student: Insert your code here
-        if(command == "maxShapes"){
-            lineStream >> max_shapes;
-            if(lineStream.fail())
-                printInvalidArgument();
-            else if (validNum(max_shapes,1)){
-                shapesArray = createDatabase(max_shapes);
-            }
-        } else if (command == "create"){
 
-            lineStream >> nameInput;
-            if(goodInput(lineStream)){
-                lineStream >> typeInput;
-                if(goodInput(lineStream)){
-                    lineStream >> xLocInput;
-                    if(goodInput(lineStream)){
-                        lineStream >> yLocInput; 
-                        if(goodInput(lineStream)){
-                            lineStream >> xSizeInput;
-                            if(goodInput(lineStream) && goodForLastInput(lineStream)){
-                                lineStream >> ySizeInput;
-                                if(inputIsDone(lineStream)){
-                                    createShape(nameInput,typeInput,xLocInput,yLocInput,xSizeInput,ySizeInput);
-                                }
-                            }
-                        }
-                    }
-                }
-            }
-        } else if (command == "move"){
-            lineStream >> nameInput;
-            if(goodInput(lineStream)){
-                lineStream >> xLocInput;
-                if(goodInput(lineStream) && goodForLastInput(lineStream)){
-                    lineStream >> yLocInput;
-                        if(inputIsDone(lineStream)){
-                            moveShape(nameInput,xLocInput,yLocInput);
-                        }
-                }
-            }
-        } else if (command == "rotate"){
-            lineStream >> nameInput;
-            if(goodInput(lineStream) && goodForLastInput(lineStream)){
-                lineStream >> rotateInput;
-                if(inputIsDone(lineStream)){
-                    rotateShape(nameInput,rotateInput);
-                }
-            }
-        } else if (command == "draw"){
-            lineStream >> nameInput;
-            if(inputIsDone(lineStream)){
-                drawShape(nameInput);
-            }
-        } else if (command == "delete"){
-            lineStream >> nameInput;
-            if(inputIsDone(lineStream)){
-                deleteShape(nameInput);
-            }
-        } else {
+        if(lineStream.eof())
             printInvalidCommand();
-        }
+        else {
+            if(command == "maxShapes"){
+                lineStream >> max_shapes;
+                if(lineStream.fail())
+                    printInvalidArgument();
+                else if (validNum(max_shapes,1)){
+                    shapesArray = createDatabase(max_shapes);
+                }
+            } else if (command == "create"){
+                createShape(lineStream);
+            } else if (command == "move"){
+                moveShape(lineStream);
+            } else if (command == "rotate"){
+                rotateShape(lineStream);
+            } else if (command == "draw"){
+                drawShape(lineStream);
+            } else if (command == "delete"){
+                deleteShape(lineStream);
+            } else {
+                printInvalidCommand();
+            }
+        }      
 
         // Once the command has been processed, prompt for the
         // next command
         cout << "> ";          // Prompt for input
-        getline(cin, line);   // Get the command line
-        
+        getline(cin, line);   // Get the command line    
     }  // End input loop until EOF.
     
     return 0;
@@ -155,90 +117,230 @@ shape** createDatabase(int size){
     return shapeDB;
 }
 
-void createShape(string n, string t, int xLoc, int yLoc, int xSize, int ySize){
-    if(!validName(n)){
-        printInvalidName();
-    } else if(findNameLocation(n) >= 0){
-        printDuplicate(n);
-    } else if(!validType(t)){
-        printInvalidType();
-    } else if(!(validNum(xLoc,1) && validNum(yLoc,1) && validNum(xSize,1) && validNum(ySize,1))){
+void createShape(stringstream& lstream){ //string n, string t, int xLoc, int yLoc, int xSize, int ySize){
+    string n,t;
+    int shapeParams[4];
+
+    //attempt to extract shape name
+    lstream >> n;
+    if(goodInput(lstream)){
+        if(!validName(n)){
+            printInvalidName();
+            return;
+        }
+        if(findNameLocation(n) >= 0){
+            printDuplicate(n);
+            return;
+        }
+    } else {
+        return;
+    }
+
+    //attempt to extract shape type
+    lstream >> t;
+    if(goodInput(lstream)){
+        if(!validType(t)){
+            printInvalidType();
+            return;
+        }
+    } else {
+        return;
+    }
+
+    //attempt to extract xLoc,yLoc,xSize,ySize
+    for(int i=0;i<3;i++){
+        lstream >> shapeParams[i];
+        if(goodInput(lstream)){
+            if(!validNum(shapeParams[i],1)){
+                printInvalidValue();
+                return;
+            }
+            if(i==2){ //for last input of the set, eof flag must not be true already
+                if(!goodForLastInput(lstream))
+                    return;
+                else
+                    lstream >> shapeParams[3];
+            }
+        } else {
+            return;
+        }
+    }
+
+    if(!goodLastInput(lstream))
+        return;
+    if(!validNum(shapeParams[3],1)){
         printInvalidValue();
-    } else if(shapeCount >= max_shapes){
+        return;
+    }
+
+    if(!inputIsDone(lstream))
+        return;
+    if(shapeCount >= max_shapes){
         printArrayFull();
     } else {
-        shapesArray[shapeCount] = new shape(n,t,xLoc,yLoc,xSize,ySize);
+        shapesArray[shapeCount] = new shape(n,t,shapeParams[0],shapeParams[1],shapeParams[2],shapeParams[3]);
         cout << "Created ";
         shapesArray[shapeCount]->draw();
         shapeCount=shapeCount+1;
     }
 }
 
-void moveShape(string nameInput,int xLocInput,int yLocInput){
-    int index = findNameLocation(nameInput);
+void moveShape(stringstream& lstream){
+    int index;
+    int loc[2];
+    string n;
 
-    if(index == -1){
-        printNotFound(nameInput);
-    } else if(!(validNum(xLocInput,1) && validNum(yLocInput,1))){
-        printInvalidValue();
-    } else {
-        shapesArray[index]->setXlocation(xLocInput);
-        shapesArray[index]->setYlocation(yLocInput);
-        cout << "Moved " << nameInput << " to " << shapesArray[index]->getXlocation() << " " << shapesArray[index]->getYlocation() << endl;
-    }
-}
-
-void rotateShape(string nameInput,int rotateInput){
-    int index = findNameLocation(nameInput);
-
-    if(index == -1){
-        printNotFound(nameInput);
-    } else if(!validNum(rotateInput,0)){
-        printInvalidValue();
-    } else {
-        shapesArray[index]->setRotate(rotateInput);
-        cout << "Rotated " << nameInput << " by " << rotateInput << " degrees" << endl;
-    }
-}
-
-void drawShape(string nameInput){
-    if(nameInput == "all"){
-        cout << "Drew all shapes" << endl;
-        for (int i=0;i<shapeCount;i++){
-            if(shapesArray[i]!=NULL){
-                shapesArray[i]->draw();
-            }
+     //attempt to extract shape name
+    lstream >> n;
+    if(goodInput(lstream)){
+        if(!validName(n)){
+            printInvalidName();
+            return;
+        }
+        index = findNameLocation(n);
+        if(index == -1){
+            printNotFound(n);
         }
     } else {
-        int index = findNameLocation(nameInput);
+        return;
+    }
+
+    //attempt to extract xLoc
+    lstream >> loc[0];
+    if(goodInput(lstream)){            
+        if(!validNum(loc[0],1)){
+            printInvalidValue();
+            return;
+        }
+        if(!goodForLastInput(lstream))
+            return;
+    } else {
+        return;
+    }
+    
+    lstream >> loc[1];
+    //check ySize inputs for validity
+    if(!goodLastInput(lstream))
+        return;
+    if(!validNum(loc[1],1)){
+        printInvalidValue();
+        return;
+    }
+
+    //checks if input stream has reached eof
+    if(!inputIsDone(lstream))
+        return;
+
+    //mutate the location of the shape
+    shapesArray[index]->setXlocation(loc[0]);
+    shapesArray[index]->setYlocation(loc[1]);
+    cout << "Moved " << n << " to " << shapesArray[index]->getXlocation() << " " << shapesArray[index]->getYlocation() << endl;
+}
+
+void rotateShape(stringstream& lstream){
+    int index,r;
+    string n;
+
+     //attempt to extract shape name
+    lstream >> n;
+    if(goodInput(lstream)){
+        if(!validName(n)){
+            printInvalidName();
+            return;
+        }
+        index = findNameLocation(n);
         if(index == -1){
-            printNotFound(nameInput);
+            printNotFound(n);
+        }
+    } else {
+        return;
+    }
+
+    //ensure eof flag has not already been set
+    if(!goodForLastInput(lstream))
+        return;
+
+    //attempt to extract rotate angle
+    lstream >> r;
+    if(goodLastInput(lstream)){
+        if(!validNum(r,0)){
+            printInvalidValue();
+            return;
+        }
+    } else {
+        return;
+    } 
+
+    //ensure input stream is empty / reached eof
+    if(!inputIsDone(lstream))
+        return;
+
+    //rotate shape
+    shapesArray[index]->setRotate(r);
+    cout << "Rotated " << n << " by " << r << " degrees" << endl;
+}
+
+void drawShape(stringstream& lstream){
+    int index;
+    string n;
+
+    //attempt to extract shape name
+    lstream >> n;
+    if(goodLastInput(lstream)){
+        
+        if(n=="all"){
+            cout << "Drew all shapes" << endl;
+            for (int i=0;i<shapeCount;i++){
+                if(shapesArray[i]!=NULL){
+                    shapesArray[i]->draw();
+                }
+            }
+            return;
+        }
+        if(!validName(n)){
+            printInvalidName();
+            return;
+        }
+        index = findNameLocation(n);
+        if(index == -1){
+            printNotFound(n);
         } else {
-            cout << "Drew " << nameInput << endl;
+            cout << "Drew " << n << endl;
             shapesArray[index]->draw();
         }
+        if(!inputIsDone(lstream))
+            return;
     }
 }
 
-void deleteShape(string nameInput){
-    if(nameInput == "all"){
-        cout << "Deleted: all shapes" << endl;
-        for (int i=0;i<shapeCount;i++){
-            if(shapesArray[i]!=NULL){
-                delete shapesArray[i];
-                shapesArray[i]=NULL;
+void deleteShape(stringstream& lstream){
+    int index;
+    string n;
+
+    //attempt to extract shape name
+    lstream >> n;
+    if(goodLastInput(lstream)){
+        if(n =="all"){
+            cout << "Deleted: all shapes" << endl;
+            for (int i=0;i<shapeCount;i++){
+                if(shapesArray[i]!=NULL){
+                    delete shapesArray[i];
+                    shapesArray[i]=NULL;
+                }
+            }
+            shapeCount=0;
+        } else {
+            index = findNameLocation(n);
+            if(index == -1){
+                printNotFound(n);
+            } else {
+                cout << "Deleted shape " << n << endl;
+                delete shapesArray[index];
+                shapesArray[index] = NULL;
             }
         }
-        shapeCount=0;
-    } else {
-        int index = findNameLocation(nameInput);
-        if(index == -1){
-            printNotFound(nameInput);
-        } else {
-            cout << "Deleted shape " << nameInput << endl;
-            delete shapesArray[index];
-            shapesArray[index] = NULL;
-        }
+        if(!inputIsDone(lstream))
+            return;
     }
 }
 
@@ -260,7 +362,7 @@ bool goodInput(stringstream& lstream){
     }
     return true;
 }
-bool goodForLastInput(stringstream & lstream){
+bool goodForLastInput(stringstream& lstream){
     while(lstream.peek() == ' ')
         lstream.ignore(1,' ');
     if(lstream.eof()){
@@ -269,12 +371,15 @@ bool goodForLastInput(stringstream & lstream){
     }
     return true;
 }
-bool inputIsDone(stringstream& lstream){
+bool goodLastInput(stringstream& lstream){;
     if (lstream.fail()){
         printInvalidArgument();
         return false;
     }
-    while(lstream.peek() == ' ')
+    return true;
+}
+bool inputIsDone(stringstream& lstream){
+    while(lstream.peek() == ' ' || lstream.peek() == '\n')
         lstream.ignore(1,' ');
     if(lstream.eof()){
         return true;

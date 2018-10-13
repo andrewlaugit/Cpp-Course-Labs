@@ -317,6 +317,8 @@ void deleteShape(stringstream& lstream){
 
 //recieves string types from main and returns if input is non-empty or reserved for commands
 bool isStreamEmpty(stringstream& lstream){
+    while(lstream.peek() == ' ' || lstream.peek() == '\n')
+        lstream.ignore(1,' ');
     if(lstream.eof()){
         printTooFewArguments();
         return true;

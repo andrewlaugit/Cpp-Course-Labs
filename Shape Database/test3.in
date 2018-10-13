@@ -4,7 +4,7 @@ create s1 triangle -100 1 2 4
 create s1 rectangle one two five eight
 create s1 hexagon 100 1200 5 8
 create s1 ellipse 100 200 1 2 6
-create s1 ellipse 100 200
+create s1 ellipse 100 200             
 create s1 rectangle 100 200 10 20
 rotate s1 -100
 rotate s1 362

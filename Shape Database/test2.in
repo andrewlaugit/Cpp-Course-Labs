@@ -1,6 +1,9 @@
-maxShapes 1
-
-create my rectangle 4 4 4 4
-
-delete my
-
+maxShapes 100
+NotACommand
+create triangle1 triangle 4 five 2 2
+create triangle1 triangle 4 5 2 2
+move triangle1 -100 100
+create move ellipse 100 100 20 10
+create Ellipse ellipse 100 100 20 10
+draw triangle1 circle1
+draw

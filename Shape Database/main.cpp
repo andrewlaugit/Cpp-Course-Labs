@@ -75,31 +75,29 @@ int main() {
 
         // Check for the command and act accordingly
         // ECE244 Student: Insert your code here
-
-        if(lineStream.eof())
+        if(lineStream.eof() && command == "") {
             printInvalidCommand();
-        else {
-            if(command == "maxShapes"){
-                lineStream >> max_shapes;
-                if(lineStream.fail())
-                    printInvalidArgument();
-                else if (validNum(max_shapes,1)){
-                    shapesArray = createDatabase(max_shapes);
-                }
-            } else if (command == "create"){
-                createShape(lineStream);
-            } else if (command == "move"){
-                moveShape(lineStream);
-            } else if (command == "rotate"){
-                rotateShape(lineStream);
-            } else if (command == "draw"){
-                drawShape(lineStream);
-            } else if (command == "delete"){
-                deleteShape(lineStream);
-            } else {
-                printInvalidCommand();
-            }
-        }      
+        }
+
+        if(command == "maxShapes"){
+            lineStream >> max_shapes;
+            if(lineStream.fail())
+                printInvalidArgument();
+            else if (validNum(max_shapes,1))
+                shapesArray = createDatabase(max_shapes);
+        } else if (command == "create"){
+            createShape(lineStream);
+        } else if (command == "move"){                
+            moveShape(lineStream);
+        } else if (command == "rotate"){
+            rotateShape(lineStream);
+        } else if (command == "draw"){
+            drawShape(lineStream);
+        } else if (command == "delete"){
+            deleteShape(lineStream);
+        } else {
+            printInvalidCommand();
+        }   
 
         // Once the command has been processed, prompt for the
         // next command
@@ -285,9 +283,10 @@ void drawShape(stringstream& lstream){
     string n;
 
     //attempt to extract shape name
+    if (!goodForLastInput(lstream))
+        return;
     lstream >> n;
-    if(goodLastInput(lstream)){
-        
+    if(goodLastInput(lstream) && inputIsDone(lstream)){
         if(n=="all"){
             cout << "Drew all shapes" << endl;
             for (int i=0;i<shapeCount;i++){
@@ -318,6 +317,8 @@ void deleteShape(stringstream& lstream){
     string n;
 
     //attempt to extract shape name
+    if (!goodForLastInput(lstream))
+        return;
     lstream >> n;
     if(goodLastInput(lstream)){
         if(n =="all"){

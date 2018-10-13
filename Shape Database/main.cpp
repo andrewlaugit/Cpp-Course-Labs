@@ -118,13 +118,11 @@ void createShape(stringstream& lstream){
     int shapeParams[4];
 
     //attempt to extract shape name
-    if(isStreamEmpty(lstream)){
+    if(isStreamEmpty(lstream))
         return;
-    }
     lstream >> n;
-    if(isStreamFail(lstream) || !validName(n)){
+    if(isStreamFail(lstream) || !validName(n))
         return;
-    }
     if(findNameLocation(n) >= 0){
         printDuplicate(n);
         return;
@@ -250,13 +248,17 @@ void drawShape(stringstream& lstream){
     if(isStreamFail(lstream))
         return;
     if(n=="all"){
-        cout << "Drew all shapes" << endl;
-        for (int i=0;i<shapeCount;i++){
-            if(shapesArray[i]!=NULL){
-                shapesArray[i]->draw();
+        if(isStreamDone(lstream)){
+            cout << "Drew all shapes" << endl;
+            for (int i=0;i<shapeCount;i++){
+                if(shapesArray[i]!=NULL){
+                    shapesArray[i]->draw();
+                }
             }
-        }
-        return;
+            return;
+        } else {
+            return;
+        } 
     }
     index = findNameLocation(n);
     if(index == -1){
@@ -280,15 +282,19 @@ void deleteShape(stringstream& lstream){
     if(isStreamFail(lstream))
         return;
     if(n=="all"){
-        cout << "Deleted: all shapes" << endl;
-        for (int i=0;i<shapeCount;i++){
-            if(shapesArray[i]!=NULL){
-                delete shapesArray[i];
-                shapesArray[i]=NULL;
+        if(isStreamDone(lstream)){
+            cout << "Deleted: all shapes" << endl;
+            for (int i=0;i<shapeCount;i++){
+                if(shapesArray[i]!=NULL){
+                    delete shapesArray[i];
+                    shapesArray[i]=NULL;
+                }
             }
+            shapeCount=0;
+            return;
+        } else {
+            return;
         }
-        shapeCount=0;
-        return;
     }
     index = findNameLocation(n);
     if(index == -1){

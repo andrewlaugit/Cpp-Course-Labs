@@ -46,8 +46,8 @@ public:
     void setName(string n);        // Sets the name of the shape
     void setXlocation(int x_loc);  // Sets location of the shape on the x-axis
     void setYlocation(int y_loc);  // Sets location of the shape on the y-axis
-    void setXSize(int x_sz);       // Sets size of the shape in the x-dimension
-    void setYSize(int y_sz);       // Sets size of the shape in the y-dimension
+    void setXsize(int x_sz);       // Sets size of the shape in the x-dimension
+    void setYsize(int y_sz);       // Sets size of the shape in the y-dimension
     
     void setRotate(int angle);     // sets the rotation of the shape
     

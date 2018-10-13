@@ -55,10 +55,10 @@ void shape::setXlocation(int x_loc){
 void shape::setYlocation(int y_loc){
     y_location = y_loc;
 }
-void shape::setXSize(int x_sz){
+void shape::setXsize(int x_sz){
     x_size = x_sz;
 }
-void shape::setYSize(int y_sz){
+void shape::setYsize(int y_sz){
     y_size = y_sz;
 }
 void shape::setRotate(int angle){

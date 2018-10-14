@@ -75,10 +75,12 @@ int main() {
 
         // Check for the command and act accordingly
         // ECE244 Student: Insert your code here
+
+        //checks for fail flag after attempting to read command
         if(lineStream.fail()){
             printInvalidCommand();
         } else {
-            if(command == "maxShapes"){
+            if(command == "maxShapes"){ //assumes no errors
                 lineStream >> max_shapes;
                 shapesArray = createDatabase(max_shapes);
             } else if (command == "create"){
@@ -95,7 +97,6 @@ int main() {
                 printInvalidCommand();
             }
         }
-        //cin.ignore(1000,'\n');
 
         // Once the command has been processed, prompt for the
         // next command
@@ -113,6 +114,9 @@ shape** createDatabase(int size){
     return shapeDB;
 }
 
+//attempts to read all 6 inputs needed, then creates and adds 
+//shape to database. Checks for errors between each read and outputs
+//error messages as defined in handout.
 void createShape(stringstream& lstream){
     string n,t;
     int shapeParams[4];
@@ -125,7 +129,7 @@ void createShape(stringstream& lstream){
         return;
     if(!validName(n))
         return;
-    if(findNameLocation(n) >= 0){
+    if(findNameLocation(n) >= 0){ //if exists within shapesArray
         printDuplicate(n);
         return;
     }
@@ -149,17 +153,20 @@ void createShape(stringstream& lstream){
         lstream >> shapeParams[i];
         if(isStreamFail(lstream))
             return;
-        if(!validNum(shapeParams[i],1)){
+        if(!validNum(shapeParams[i],1)){ 
             printInvalidValue();
             return;
         }
     }
-    if(!isStreamDone(lstream))
+
+    //ensures eof has been reached and stream empty
+    if(!isStreamDone(lstream)) 
         return;
 
+    //ensures array is not already at capacity
     if(shapeCount >= max_shapes){
         printArrayFull();
-    } else {
+    } else { //dynamically allocates new shape with defined settings and outputs
         shapesArray[shapeCount] = new shape(n,t,shapeParams[0],shapeParams[1],shapeParams[2],shapeParams[3]);
         cout << "Created ";
         shapesArray[shapeCount]->draw();
@@ -167,6 +174,7 @@ void createShape(stringstream& lstream){
     }
 }
 
+//reads name and x,y location for moving shape
 void moveShape(stringstream& lstream){
     int index;
     int loc[2];
@@ -205,6 +213,8 @@ void moveShape(stringstream& lstream){
     cout << "Moved " << n << " to " << shapesArray[index]->getXlocation() << " " << shapesArray[index]->getYlocation() << endl;
 }
 
+//attempts to read name and angle from lstream to add
+//rotate value into specified shape
 void rotateShape(stringstream& lstream){
     int index,r;
     string n;
@@ -215,6 +225,8 @@ void rotateShape(stringstream& lstream){
     lstream >> n;
     if(isStreamFail(lstream))
         return;
+    
+    //attempts to locate shape within array
     index = findNameLocation(n);
     if(index == -1){
         printNotFound(n);
@@ -227,10 +239,14 @@ void rotateShape(stringstream& lstream){
     lstream >> r;
     if(isStreamFail(lstream))
         return;
+
+    //ensures number is between 0 and 360
     if(!validNum(r,0)){            
         printInvalidValue();
         return;
     }
+
+    //ensures stream is empty and no more arguments
     if(!isStreamDone(lstream))
         return;
 
@@ -249,7 +265,8 @@ void drawShape(stringstream& lstream){
     lstream >> n;
     if(isStreamFail(lstream))
         return;
-    if(n=="all"){
+
+    if(n=="all"){ // if all and no other inputs
         if(isStreamDone(lstream)){
             cout << "Drew all shapes" << endl;
             for (int i=0;i<shapeCount;i++){
@@ -262,17 +279,21 @@ void drawShape(stringstream& lstream){
             return;
         } 
     }
+
+    //attempts to find index of shape within array
     index = findNameLocation(n);
     if(index == -1){
         printNotFound(n);
         return;
     }
+    //ensures stream is empty before drawing
     if(!isStreamDone(lstream))
         return;
     cout << "Drew " << n << endl;
     shapesArray[index]->draw();
 }
 
+//reads name from stream to delete shape(s)
 void deleteShape(stringstream& lstream){
     int index;
     string n;
@@ -283,7 +304,8 @@ void deleteShape(stringstream& lstream){
     lstream >> n;
     if(isStreamFail(lstream))
         return;
-    if(n=="all"){
+
+    if(n=="all"){ //if all and stream empty
         if(isStreamDone(lstream)){
             cout << "Deleted: all shapes" << endl;
             for (int i=0;i<shapeCount;i++){
@@ -298,26 +320,32 @@ void deleteShape(stringstream& lstream){
             return;
         }
     }
+
+    //find location of shape to be deleted
     index = findNameLocation(n);
     if(index == -1){
         printNotFound(n);
         return;
     }
+
+    //ensures stream is empty
     if(!isStreamDone(lstream))
         return;
+
     cout << "Deleted shape " << n << endl;
     delete shapesArray[index];
     shapesArray[index] = NULL;
 }
-
-
-
 
 //======================================================================================================================
 //functions for error prevention and notification
 //======================================================================================================================
 
 //recieves string types from main and returns if input is non-empty or reserved for commands
+
+//jumps over all whitespace and checks for eof flag
+//returns true if eof flag set and stream empty, prints "too few arguments" error
+//returns false if stream has readable input
 bool isStreamEmpty(stringstream& lstream){
     while(lstream.peek() == ' ' || lstream.peek() == '\n')
         lstream.ignore(1,' ');
@@ -328,6 +356,9 @@ bool isStreamEmpty(stringstream& lstream){
         return false;
     }
 }
+
+//returns true if fail flag set and prints "invalid argument error"
+//returns false if input successful without raising flag
 bool isStreamFail(stringstream& lstream){;
     if (lstream.fail()){
         printInvalidArgument();
@@ -336,6 +367,10 @@ bool isStreamFail(stringstream& lstream){;
         return false;
     }
 }
+
+//jumps over all whitespace and checks for eof flag
+//returns true if eof flag set and no more arguments
+//returns false if stream has readable input, prints "too many arguments" error
 bool isStreamDone(stringstream& lstream){
     while(lstream.peek() == ' ' || lstream.peek() == '\n')
         lstream.ignore(1,' ');
@@ -347,6 +382,9 @@ bool isStreamDone(stringstream& lstream){
     }
 }
 
+//checks if name is defined as command or type
+//returns true if name is allowed
+//returns false if name is blank or matches command/type
 bool validName(string name){
     for (int i=0; i<NUM_KEYWORDS; i++){
         if(name == keyWordsList[i]){
@@ -361,6 +399,9 @@ bool validName(string name){
         return true;
     }       
 }
+
+//searches shapeArray for match in name, returns index 
+//or -1 if not found
 int findNameLocation(string name){
     for(int i=0;i<shapeCount;i++){
        if(shapesArray[i]->getName() == name){
@@ -369,6 +410,11 @@ int findNameLocation(string name){
     }
     return -1;
 }
+
+//checks if inputted type is valid and matches one of 
+//3 types defined in globals.h
+//returns true for valid type
+//returns false for unknown type
 bool validType(string type){
     for (int i=0; i<NUM_TYPES; i++){
         if(type == shapeTypesList[i])
@@ -385,7 +431,7 @@ bool validNum(int numInput, int numType){
                 return false;
                 break;
             }
-        case 1: //location, size, value
+        case 1: //location, size
             if(numInput >= 0)
                 return true;
             else 

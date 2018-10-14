@@ -1,8 +1,6 @@
 maxShapes 3
 
 create my_circle ellipse 50 65 20 20 adf
-
-
 create my_circle ellipse 50 65 
 create my_circle ellipse 50 65 20 20         
 create my_square rectangle 100 150 60 60 304
@@ -14,17 +12,13 @@ create my_triangle triangle 40 75 -90 90
 create my_rectangle rectangle 100 275 90 180 200
 create my_rectangle rectangle 100 275 90 
 create my_rectangle rectangle 100 275 90 180 
-create ellipse rectangle 100 275 90 180
+create ellipse rectangle 30 30 30 30 
 create my_rectangle triangle 70 50 10 5
 create second_triangle triangle 70 50 10 5
-
-
 move my_circle
 mve my_circle
 move my_circle 70 90
-
-
-rotate my_rectangle 90 100
+rotate myrectangle 90 100
 rotate my_rectangle 100
 rotate my_rectangle 400
 draw my_trinagle
@@ -33,5 +27,8 @@ draw all
 delete my_square
 draw all
 delete all
+create ellipse rectangle 30 30 30 30 
+create my_rectangle triangle 70 50 10 5
+create triangle 70 50 10 5
 draw all
 

@@ -121,7 +121,9 @@ void createShape(stringstream& lstream){
     if(isStreamEmpty(lstream))
         return;
     lstream >> n;
-    if(isStreamFail(lstream) || !validName(n))
+    if(isStreamFail(lstream))
+        return;
+    if(!validName(n))
         return;
     if(findNameLocation(n) >= 0){
         printDuplicate(n);
@@ -352,9 +354,12 @@ bool validName(string name){
             return false;
         } 
     }
-    if (validType(name) || name == "")
+    if (validType(name) || name == ""){
+        printInvalidName();
         return false;
-    return true;
+    } else {
+        return true;
+    }       
 }
 int findNameLocation(string name){
     for(int i=0;i<shapeCount;i++){

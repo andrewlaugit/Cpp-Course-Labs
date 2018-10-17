@@ -357,21 +357,35 @@ bool isStreamEmpty(stringstream& lstream){
     }
 }
 
-//returns true if fail flag set and prints "invalid argument error"
+//returns true if fail flag set or there exists no space after the
+//argument and prints "invalid argument error"
 //returns false if input successful without raising flag
 bool isStreamFail(stringstream& lstream){;
     if (lstream.fail()){
         printInvalidArgument();
         return true;
     } else {
+        if(lstream.peek() != ' '){
+            while(lstream.peek() == ' ' || lstream.peek() == '\n')
+                lstream.ignore(1,' ');
+            if(!lstream.eof()){
+                printInvalidArgument();
+                return true;
+            }
+        }
         return false;
     }
 }
 
+//checks if stream has reached eof and is empty
 //jumps over all whitespace and checks for eof flag
 //returns true if eof flag set and no more arguments
 //returns false if stream has readable input, prints "too many arguments" error
 bool isStreamDone(stringstream& lstream){
+    if(lstream.peek() == '.'){
+        printInvalidArgument();
+        return false;
+    }
     while(lstream.peek() == ' ' || lstream.peek() == '\n')
         lstream.ignore(1,' ');
     if(lstream.eof()) {
@@ -400,11 +414,12 @@ bool validName(string name){
     }       
 }
 
-//searches shapeArray for match in name, returns index 
+//searches shapeArray for match in name, returns index
 //or -1 if not found
+//to avoid segfault, check if object exists first
 int findNameLocation(string name){
     for(int i=0;i<shapeCount;i++){
-       if(shapesArray[i]->getName() == name){
+       if(shapesArray[i]!=NULL && shapesArray[i]->getName() == name){
             return i;
        }
     }

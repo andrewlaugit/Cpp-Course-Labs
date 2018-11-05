@@ -88,7 +88,7 @@ int AsteroidList::size() const {
 	const  AsteroidListItem* tempPtr = head.getNext();
 	while (tempPtr != nullptr){
 		tempPtr = tempPtr->getNext();
-		count=count+1;
+		count++;
 	}
 	return count;
 }
@@ -165,9 +165,10 @@ AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, const Astero
 	while(copyItemPtr != nullptr){
 		AsteroidListItem* newItemPtr = new AsteroidListItem(copyItemPtr->getData());
 		lastPtr->setNext(newItemPtr);
-		newItemPtr = newItemPtr->getNext();
+		copyItemPtr = copyItemPtr->getNext();
 		lastPtr = lastPtr->getNext();
 	}
+        lastPtr->setNext(prev->getNext());
 	return lastPtr;
 }
 

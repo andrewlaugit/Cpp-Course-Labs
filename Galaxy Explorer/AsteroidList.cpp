@@ -37,7 +37,7 @@ AsteroidList::AsteroidList(const AsteroidList& src) {
             AsteroidListItem* newItemPtr = new AsteroidListItem(srcPtr->getData());
             currentItemPtr->setNext(newItemPtr);
             srcPtr = srcPtr->getNext();
-            //currentItemPtr = currentItemPtr->getNext();
+            currentItemPtr = currentItemPtr->getNext();
 	}
 }
 

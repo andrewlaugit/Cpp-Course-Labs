@@ -160,6 +160,7 @@ AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, Asteroid e) 
 //inserts copies of others after prev, returns last item inserted
 AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, const AsteroidList& others) {
 	const AsteroidListItem* copyItemPtr = others.head.getNext();
+        AsteroidListItem* temp = prev->getNext();
 	AsteroidListItem* lastPtr = prev;
 
 	while(copyItemPtr != nullptr){
@@ -168,7 +169,7 @@ AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, const Astero
 		copyItemPtr = copyItemPtr->getNext();
 		lastPtr = lastPtr->getNext();
 	}
-        lastPtr->setNext(prev->getNext());
+        lastPtr->setNext(temp);
 	return lastPtr;
 }
 

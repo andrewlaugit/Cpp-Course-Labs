@@ -2,9 +2,8 @@
 
 //default constructor for AsteroidListItem
 AsteroidListItem::AsteroidListItem() {
-	Asteroid* id = new Asteroid;
 	this->next = nullptr;
-	this->data = id;
+	this->data = nullptr;
 }
 
 //copy constructor for AsteroidListItem
@@ -31,13 +30,14 @@ AsteroidList::AsteroidList() {
 AsteroidList::AsteroidList(const AsteroidList& src) {
 
 	//start from item after head
-	AsteroidListItem* srcPtr = src.head.getNext();
+	const AsteroidListItem* srcPtr = src.head.getNext();
 	AsteroidListItem* currentItemPtr = &head;
 
 	while(srcPtr != nullptr){ //check if srcPtr is item
-		AsteroidListItem* newItemPtr = new AsteroidListItem( *(srcPtr->getData()) );
-		currentItemPtr->setNext(newItemPtr);
-		srcPtr = srcPtr->getNext();
+            AsteroidListItem* newItemPtr = new AsteroidListItem(srcPtr->getData());
+            currentItemPtr->setNext(newItemPtr);
+            srcPtr = srcPtr->getNext();
+            //currentItemPtr = currentItemPtr->getNext();
 	}
 }
 
@@ -55,23 +55,23 @@ AsteroidList::~AsteroidList() {
 
 //inserts Asteroid e at beginning of list
 void AsteroidList::pushFront(Asteroid e) {
-	AsteriodListItem* newHeadPtr = new AsteroidListItem(e);
+	AsteroidListItem* newHeadPtr = new AsteroidListItem(e);
 	newHeadPtr->setNext(head.getNext());
 	head.setNext(newHeadPtr);
 }
 
 Asteroid& AsteroidList::front() {
 	if(head.getNext() == nullptr)
-		return nullptr;
+            return head.getData();
 	else
-		return *(head.getNext().getData());
+            return head.getNext()->getData();
 }
 
 const Asteroid& AsteroidList::front() const {
 	if(head.getNext() == nullptr)
-		return nullptr;
+            return head.getData();
 	else
-		return const *(head.getNext().getData());
+            return head.getNext()->getData();
 }
 
 //returns true if list contains only the head
@@ -85,10 +85,10 @@ bool AsteroidList::isEmpty() const {
 //returns the number of items in the list excluding the head
 int AsteroidList::size() const {
 	int count = 0;
-	AsteriodListItem* tempPtr = head.getNext();
+	const  AsteroidListItem* tempPtr = head.getNext();
 	while (tempPtr != nullptr){
 		tempPtr = tempPtr->getNext();
-		count++;
+		count=count+1;
 	}
 	return count;
 }
@@ -98,7 +98,7 @@ AsteroidListItem* AsteroidList::beforeBegin() {
 }
 
 const AsteroidListItem* AsteroidList::beforeBegin() const {
-	return const &head;
+	return &head;
 }
 
 AsteroidListItem* AsteroidList::begin() {
@@ -106,13 +106,13 @@ AsteroidListItem* AsteroidList::begin() {
 }
 
 const AsteroidListItem* AsteroidList::begin() const {
-	return const head.getNext();
+	return head.getNext();
 }
 
 //returns the position of the last asteroid
 AsteroidListItem* AsteroidList::beforeEnd() {
-	AsteriodListItem* tempNextPtr = head.getNext();
-	AsteriodListItem* tempPtr = &head;
+	AsteroidListItem* tempNextPtr = head.getNext();
+	AsteroidListItem* tempPtr = &head;
 	while (tempNextPtr != nullptr){
 		tempPtr = tempNextPtr;
 		tempNextPtr = tempNextPtr->getNext();
@@ -122,18 +122,18 @@ AsteroidListItem* AsteroidList::beforeEnd() {
 
 //returns the position of the last asteroid
 const AsteroidListItem* AsteroidList::beforeEnd() const {
-	AsteriodListItem* tempNextPtr = head.getNext();
-	AsteriodListItem* tempPtr = &head;
+	const AsteroidListItem* tempNextPtr = head.getNext();
+	const AsteroidListItem* tempPtr = &head;
 	while (tempNextPtr != nullptr){
 		tempPtr = tempNextPtr;
 		tempNextPtr = tempNextPtr->getNext();
 	}
-	return const tempPtr;
+	return tempPtr;
 }
 
 //returns the position after last asteroid
 AsteroidListItem* AsteroidList::end() {
-	AsteriodListItem* tempPtr = head.getNext();
+	AsteroidListItem* tempPtr = head.getNext();
 	while (tempPtr != nullptr){
 		tempPtr = tempPtr->getNext();
 	}
@@ -142,11 +142,11 @@ AsteroidListItem* AsteroidList::end() {
 
 //returns the position of the last asteroid
 const AsteroidListItem* AsteroidList::end() const {
-	AsteriodListItem* tempPtr = head.getNext();
+	const AsteroidListItem* tempPtr = head.getNext();
 	while (tempPtr != nullptr){
 		tempPtr = tempPtr->getNext();
 	}
-	return const tempPtr;
+	return tempPtr;
 }
 
 //adds single asteroid to this list in position after prev, returns item inserted
@@ -159,12 +159,12 @@ AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, Asteroid e) 
 
 //inserts copies of others after prev, returns last item inserted
 AsteroidListItem* AsteroidList::insertAfter(AsteroidListItem* prev, const AsteroidList& others) {
-	AsteroidListItem* nextItemPtr = others.head.getNext();
+	const AsteroidListItem* copyItemPtr = others.head.getNext();
 	AsteroidListItem* lastPtr = prev;
 
-	while(newItemPtr != nullptr){
-		AsteroidListItem* newItemPtr = new AsteroidListItem( *(nextItem->getData()) );
-		lastPtr.setNext(newItemPtr);
+	while(copyItemPtr != nullptr){
+		AsteroidListItem* newItemPtr = new AsteroidListItem(copyItemPtr->getData());
+		lastPtr->setNext(newItemPtr);
 		newItemPtr = newItemPtr->getNext();
 		lastPtr = lastPtr->getNext();
 	}
@@ -211,12 +211,13 @@ AsteroidList& AsteroidList::operator=(const AsteroidList& src) {
 	head.setNext(nullptr);
 
 	//start from item after head
-	AsteroidListItem* srcPtr = src.head.getNext();
+	const AsteroidListItem* srcPtr = src.head.getNext();
 	AsteroidListItem* currentItemPtr = &head;
 	while(srcPtr != nullptr){ //check if srcPtr is item
-		AsteroidListItem* newItemPtr = new AsteroidListItem( *(srcPtr->getData()) );
+		AsteroidListItem* newItemPtr = new AsteroidListItem(srcPtr->getData());
 		currentItemPtr->setNext(newItemPtr);
 		srcPtr = srcPtr->getNext();
+                currentItemPtr = currentItemPtr->getNext();
 	}
 
 	//return list

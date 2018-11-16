@@ -6,6 +6,10 @@
 #include <iostream>
 using namespace std;
 
+
+/* GameAI default constructor
+ * initializes the game ai data structures
+*/
 GameAI::GameAI(const GameInfo& game_info, sf::RenderTarget* debug_rt)
 {
 	this->debug_rt = debug_rt;
@@ -16,10 +20,19 @@ GameAI::GameAI(const GameInfo& game_info, sf::RenderTarget* debug_rt)
 	customState().debug_on = true;
 }
 
+
+/* GameAI destructor
+ * deletes dynamically allocated data
+*/
 GameAI::~GameAI() {
 	delete my_game_ai;
 }
 
+
+/* MyAIData findClosest
+ * determines the asteroid which is closest to the ship
+ * - returns the pointer to list item of closest rock
+*/
 AsteroidListItem* MyAIData::findClosest(AsteroidListItem* firstItem){
     int dx = 0;
     int dy = 0;
@@ -40,20 +53,31 @@ AsteroidListItem* MyAIData::findClosest(AsteroidListItem* firstItem){
     }
     return closestItem;
 }
+
+
+/* MyAIData removeDestroyedFromArray
+ * clears rock data in array from rocks that are no longer on the screen
+*/
 void MyAIData::removeDestroyedFromArray(AsteroidListItem* firstItem){
     AsteroidListItem* currentItem = firstItem;
+
+    //reset all 'found' indicators
     for(int i=0;i<10;i++){
         rocksInRange[i][2] = 0;
     }
+
+    //check if item in array still exists on screen
     while(currentItem != nullptr){
         for(int i=0;i<10;i++){
             if(currentItem->getData().getID() == rocksInRange[i][0]){
                 rocksInRange[i][2] = 1;
-               // rocksInRange[i][3] = findAngle(currentItem);
+                //rocksInRange[i][3] = findAngle(currentItem);
             }
         }
         currentItem = currentItem->getNext();
     }
+
+    //if not 'found', reset all values to 0
     for(int i=0;i<10;i++){
         if(rocksInRange[i][2] == 0){
             for(int j=0;j<5;j++){
@@ -64,41 +88,51 @@ void MyAIData::removeDestroyedFromArray(AsteroidListItem* firstItem){
 }
 
 
+/* MyAIData findWillHit
+ * determines all rocks which will hit the ship
+ * - stores the first ten rocks (which will hit) in an array
+ * - determines the number of rocks which will hit the ship
+ * - returns the pointer to closest rock which will hit ship
+*/
 AsteroidListItem* MyAIData::findWillHit(AsteroidListItem* firstItem){
-    int dx = 0;
-    int dy = 0;
-    int dxy = 0;
+    int dx, dy, dxy;
     int smallest = 20000;
-    int boxL = 0;
-    int boxH = 0;
+    int boxL, boxH;
     bool outOfBoard = false;
+
     AsteroidListItem* currentItem = firstItem;
     AsteroidListItem* nearestHitItem = nullptr;
     
-    
+    //reset all values
     numWillHit = 0;
     removeDestroyedFromArray(firstItem);
 
+    //check all items appearing on the screen
     while(currentItem != nullptr){
+
+        //determine distance in x,y,hypotenuse
         dx = currentItem->getData().getCurrentHitbox().left;
         dy = currentItem->getData().getCurrentHitbox().top;
         dxy = sqrt( pow(dx,2) + pow(dy,2));
         boxL = 1.3* currentItem->getData().getCurrentHitbox().width;
         boxH = 1.3* currentItem->getData().getCurrentHitbox().height;
         
+        //repeat frame by frame until rock 'hits' ship or exits board dimensions
         outOfBoard =false;
         while(!outOfBoard){
             dx = dx + currentItem->getData().getVelocity().x;
             dy = dy + currentItem->getData().getVelocity().y;
             
-            
+            //conditions for when the rock will hit ship
             if(dx <= 11000+boxL && dx >= 9000-boxL && dy <= 20000 && dy >= 18000-boxH ){
                 numWillHit++;
+
+                //
                 if(numWillHit <= 10){
                     for(int i=0;i<10;i++){
-                        if(rocksInRange[i][0] == currentItem->getData().getID())
+                        if(rocksInRange[i][0] == currentItem->getData().getID()) //already exists
                             break;
-                        if(rocksInRange[i][0] == 0){
+                        if(rocksInRange[i][0] == 0){ //save key information in empty array position
                             rocksInRange[i][0] = currentItem->getData().getID();
                             rocksInRange[i][3] = findAngle(currentItem);
                             rocksInRange[i][4] = currentItem->getData().getMass();
@@ -106,6 +140,9 @@ AsteroidListItem* MyAIData::findWillHit(AsteroidListItem* firstItem){
                         }
                     }
                 }
+
+                //determine if smallest, save if so
+                //else move onto next rock in screen
                 if (dxy < smallest){
                     smallest = dxy; 
                     nearestHitItem = currentItem;
@@ -114,14 +151,23 @@ AsteroidListItem* MyAIData::findWillHit(AsteroidListItem* firstItem){
                 }
                 outOfBoard= true;
             }
+            
+            //rock will exit screen without hitting ship
             if(dx >= 20000 || dx <= 0 || dy >= 20000 || dy <= 0){
                 currentItem = currentItem->getNext();
                 outOfBoard = true;
             }
         }
     }
+
     return nearestHitItem;
 }
+
+
+/* MyAIData findAngle
+ * determines the angle the ship must shoot at to hit fireItem
+ * returns angle in millidegrees
+*/
 int MyAIData::findAngle(AsteroidListItem* fireItem){
     int dx = 0;
     int dy = 0;
@@ -129,23 +175,28 @@ int MyAIData::findAngle(AsteroidListItem* fireItem){
     int numFrames = 0;
     int angleRight = 0;
     
+    //determine distance in x,y, and hypotenuse
     dx = (fireItem->getData().getCurrentHitbox().left+ fireItem->getData().getCurrentHitbox().width/2) - 10000;
     dy = 20000 - (fireItem->getData().getCurrentHitbox().top + fireItem->getData().getCurrentHitbox().height/2);
     dRock = sqrt( pow(dx,2) + pow(dy,2));
 
+    //calculate approx number of frames needed to hit target
     numFrames = dRock / 100;
     
+    //adjustment factor for rocks far away
     if (dRock > 5000) {
         numFrames = 2* numFrames/3;
     }
     
+    //determine the position of the rock when it should be hit
     dx = dx + fireItem->getData().getVelocity().x * numFrames;
     dy = dy - fireItem->getData().getVelocity().y * numFrames;
-            
+
+    //calculates angle needed to hit rock        
     if(dx != 0) {
         angleRight = atan((double)dx / dy) * 57 * 1000; //converts rad into millidegrees
     } else if (angleRight > 40000 || angleRight < -40000) {
-        angleRight = 2 * angleRight;
+        angleRight = 2 * angleRight; //adjustment factor for large angles
     } else {
         angleRight = 0;
     }
@@ -154,6 +205,10 @@ int MyAIData::findAngle(AsteroidListItem* fireItem){
 }
 
 
+/* GameAI suggestAction
+ * determines the action the ship should take (rotate, fire)
+ * - uses play data to determine move to make
+*/
 SuggestedAction GameAI::suggestAction(const ShipState& ship_state) {
         bool usingSaved = false;
         bool aim = false;
@@ -161,34 +216,39 @@ SuggestedAction GameAI::suggestAction(const ShipState& ship_state) {
         int leastNumShots = 1000;
         int numShotsPerRock = 0;
         int buffer = 1500;
-        
+
         AsteroidListItem* currentItem = asteroidsObserver().asteroids().begin();
         AsteroidListItem* closestItem = nullptr;
         AsteroidListItem* willHitItem = nullptr;
         AsteroidListItem* fireItem = nullptr;
         
+        //find closest item that will hit ship and the closest item to the ship
         willHitItem = my_game_ai->findWillHit(currentItem);
         closestItem = my_game_ai->findClosest(currentItem);
 
-	debug_rt->clear(sf::Color::Transparent);
+        //clears the debug window
+	    debug_rt->clear(sf::Color::Transparent);
         
+        //when there exists 3 or more rocks that are bound to hit ship, use data from array
         if(my_game_ai->numWillHit > 2){
             usingSaved = true;
         } else {
+            //priority of items to fire at as follows
+            // 1. shoot at item that will hit ship, if not existent,
+            // 2. shoot at item that is closest to ship
             if (willHitItem != nullptr){
                 fireItem = willHitItem;
                 aim=true;
             } else if (closestItem != nullptr){
                 fireItem = closestItem;
                 aim=true;
-            } else if (currentItem != nullptr){
-                fireItem = currentItem;
-                aim=true;
-            }
-            
+            }             
         }
 
+        //when using the data from array to determine move
         if(usingSaved){
+
+            //allows each rock to be shot at 3 times before moving onto next
             numShotsPerRock = 3; 
             if(my_game_ai->rockSize == 300) {
                // if(my_game_ai->numSmallRocks > 3){
@@ -243,47 +303,7 @@ SuggestedAction GameAI::suggestAction(const ShipState& ship_state) {
             my_game_ai->rockSize = fireItem->getData().getMass();
         }
 
-        //draws debugging boxes
-        if (customState().debug_on) {
-		if ( currentItem != nullptr ) {
-			const sf::IntRect first_ast_hb = currentItem->getData().getCurrentHitbox();
-			sf::RectangleShape ast_rect(sf::Vector2f(first_ast_hb.width, first_ast_hb.height));
-			ast_rect.setPosition(first_ast_hb.left, first_ast_hb.top);
-			ast_rect.setOutlineThickness(33.0f); // if lines are too thin, they won't show up sometimes
-			ast_rect.setOutlineColor(sf::Color::Yellow);
-			ast_rect.setFillColor(sf::Color::Transparent);
-			debug_rt->draw(ast_rect);
-                }
-                if ( willHitItem != nullptr ) {        
-                        const sf::IntRect hit_ast_hb = willHitItem->getData().getCurrentHitbox();
-			sf::RectangleShape ast_rect1(sf::Vector2f(hit_ast_hb.width, hit_ast_hb.height));
-			ast_rect1.setPosition(hit_ast_hb.left, hit_ast_hb.top);
-			ast_rect1.setOutlineThickness(33.0f); // if lines are too thin, they won't show up sometimes
-			ast_rect1.setOutlineColor(sf::Color::Red);
-			ast_rect1.setFillColor(sf::Color::Transparent);
-			debug_rt->draw(ast_rect1);
-                }
-                if ( closestItem != nullptr ) {        
-                        const sf::IntRect close_ast_hb = closestItem->getData().getCurrentHitbox();
-			sf::RectangleShape ast_rect2(sf::Vector2f(close_ast_hb.width, close_ast_hb.height));
-			ast_rect2.setPosition(close_ast_hb.left, close_ast_hb.top);
-			ast_rect2.setOutlineThickness(33.0f); // if lines are too thin, they won't show up sometimes
-			ast_rect2.setOutlineColor(sf::Color::Blue);
-			ast_rect2.setFillColor(sf::Color::Transparent);
-			debug_rt->draw(ast_rect2);
-		}
-                if ( fireItem != nullptr ) {        
-                        const sf::IntRect fire_ast_hb = fireItem->getData().getCurrentHitbox();
-			sf::RectangleShape ast_rect3(sf::Vector2f(fire_ast_hb.width, fire_ast_hb.height));
-			ast_rect3.setPosition(fire_ast_hb.left, fire_ast_hb.top);
-			ast_rect3.setOutlineThickness(33.0f); // if lines are too thin, they won't show up sometimes
-			ast_rect3.setOutlineColor(sf::Color::Green);
-			ast_rect3.setFillColor(sf::Color::Transparent);
-			debug_rt->draw(ast_rect3);
-		}
-	}  
-
-        //determine shooting angle range
+        //determine shooting angle range (alowing for juttering)
         if(aim || usingSaved){
             angleLeft = my_game_ai->angleRight - buffer;
             my_game_ai->angleRight = my_game_ai->angleRight + buffer;

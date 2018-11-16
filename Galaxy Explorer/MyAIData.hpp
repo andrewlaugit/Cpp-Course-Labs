@@ -31,14 +31,11 @@ struct MyAIData {
     //size of the rock being fired at
     int rockSize = 0;
 
-    //number of small rocks in play
-    int numSmallRocks= 0;
-
     /* holds up to 10 different rocks 
     * values stored:
     * ID - unique id of the rock to ensure no duplicates
     * Shots taken at - keeps track of number of shots the rock has been shot at
-    * Still on board - 1 if still in play, 0 if not on board anymore
+    * Still on board? - 1 if still in play, 0 if not on board anymore
     * angle right - the angle needed to hit rock
     * size/mass - the value of the mass of the rock 
     */

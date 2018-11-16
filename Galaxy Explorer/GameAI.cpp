@@ -10,14 +10,13 @@ using namespace std;
 /* GameAI default constructor
  * initializes the game ai data structures
 */
-GameAI::GameAI(const GameInfo& game_info, sf::RenderTarget* debug_rt)
-{
+GameAI::GameAI(const GameInfo& game_info, sf::RenderTarget* debug_rt) {
 	this->debug_rt = debug_rt;
 	this->game_info = game_info;
 	this->asteroid_observer = AsteroidsObserver(this);
 	this->my_game_ai = new MyAIData();
 
-	customState().debug_on = true;
+	customState().debug_on = false;
 }
 
 
@@ -29,21 +28,135 @@ GameAI::~GameAI() {
 }
 
 
+/* GameAI suggestAction
+ * determines the action the ship should take (rotate, fire)
+ * - uses play data to determine move to make
+*/
+SuggestedAction GameAI::suggestAction(const ShipState& ship_state) {
+        bool usingSaved = false;
+        bool aim = false;
+        int angleLeft = 0;
+        int leastNumShots = 1000;
+        int buffer = 2;
+
+        AsteroidListItem* currentItem = asteroidsObserver().asteroids().begin();
+        AsteroidListItem* closestItem = nullptr;
+        AsteroidListItem* willHitItem = nullptr;
+        AsteroidListItem* fireItem = nullptr;
+        
+        //find closest item that will hit ship and the closest item to the ship
+        willHitItem = my_game_ai->findWillHit(currentItem);
+        closestItem = my_game_ai->findClosest(currentItem);
+
+        //clears the debug window
+	    debug_rt->clear(sf::Color::Transparent);
+        
+        //when there exists 3 or more rocks that are bound to hit ship, use data from array
+        if(my_game_ai->numWillHit > 2){
+            usingSaved = true;
+        } else {
+            //priority of items to fire at as follows
+            // 1. shoot at item that will hit ship, if not existent,
+            // 2. shoot at item that is closest to ship
+            if (willHitItem != nullptr){
+                fireItem = willHitItem;
+                aim=true;
+            } else if (closestItem != nullptr){
+                fireItem = closestItem;
+                aim=true;
+            }             
+        }
+
+        //when using the data from array to determine move
+        if(usingSaved){
+            
+            //within this little angle range, magical things happen when you remove the buffer
+            if((my_game_ai->angleRight < -35000 && my_game_ai->angleRight > -45000)) {
+                buffer = 0;
+            } else if((my_game_ai->angleRight > 35000 && my_game_ai->angleRight < 45000)) {
+                buffer = 0;
+            }            
+                        
+            //reset numShots and move onto next rock
+            if(my_game_ai->numShots == 1){
+                my_game_ai->numShots = 0;
+            }
+           
+            //determines the index within array storing rocks that will hit ship
+            //finds the rock which has been shot at the least 
+            if(my_game_ai->numShots == 0){                
+                for(int i=0;i<10;i++){
+                                       
+                    //if the array item exists and not previously shot at 3 times
+                    if(my_game_ai->rocksInRange[i][0] != 0  
+                            && my_game_ai->rocksInRange[i][0] != my_game_ai->lastId 
+                            && my_game_ai->rocksInRange[i][1] < leastNumShots){
+                        my_game_ai->prevIndex = i;
+                        leastNumShots = my_game_ai->rocksInRange[i][1];
+                    }
+                }
+            }
+
+            //update the angleRight (used in current round) and rockSize (used in next round)
+            my_game_ai->angleRight = my_game_ai->rocksInRange[my_game_ai->prevIndex][3];
+            my_game_ai->rockSize = my_game_ai->rocksInRange[my_game_ai->prevIndex][4];
+            
+            //increments 'times shot at' when ship actually fires a rock towards the intended target
+            if(ship_state.frames_until_phaser_is_ready == 1 
+                    && ship_state.millidegree_rotation >= my_game_ai->angleRight-2000 
+                    && ship_state.millidegree_rotation <= my_game_ai->angleRight+2000){
+                my_game_ai->numShots++;
+                my_game_ai->lastId = my_game_ai->rocksInRange[my_game_ai->prevIndex][0];
+                my_game_ai->rocksInRange[my_game_ai->prevIndex][1]++;
+            }
+            
+        //when array not being used (less than 3 rocks going towards ship)
+        } else if (aim) {
+            my_game_ai->angleRight = my_game_ai->findAngle(fireItem);
+            my_game_ai->rockSize = fireItem->getData().getMass();
+        }
+
+        //determine shooting angle range (allowing for shooting around rock)
+        if(aim || usingSaved){
+            if(my_game_ai->angleRight > 0){ //right side of ship
+                angleLeft = ((my_game_ai->angleRight)/2000) * 2000;
+                my_game_ai->angleRight = ((my_game_ai->angleRight)/2000 + buffer) * 2000;
+            } else { //left side of ship
+                angleLeft = ((my_game_ai->angleRight)/2000 - buffer) * 2000;
+                my_game_ai->angleRight = ((my_game_ai->angleRight)/2000) * 2000;
+            }
+        } else { //shoot in cone otherwise
+            angleLeft = -45000;
+            my_game_ai->angleRight = 45000;
+        }
+            
+        // allows for spraying pattern to go around targeted angle range
+        if (ship_state.millidegree_rotation <= angleLeft) {
+            my_game_ai->ccw=false;
+        } else if (ship_state.millidegree_rotation >= my_game_ai->angleRight) {
+            my_game_ai->ccw=true;
+        }
+       
+        if(my_game_ai->ccw) {
+            return SuggestedAction{ SuggestedAction::YawingAntiClockwise, SuggestedAction::FiringTry };
+        } else {
+            return SuggestedAction{ SuggestedAction::YawingClockwise, SuggestedAction::FiringTry };
+        }
+}
+
 /* MyAIData findClosest
  * determines the asteroid which is closest to the ship
  * - returns the pointer to list item of closest rock
 */
 AsteroidListItem* MyAIData::findClosest(AsteroidListItem* firstItem){
-    int dx = 0;
-    int dy = 0;
-    int dxy = 0;
+    int dx,dy,dxy;
     int smallest=20000;
     AsteroidListItem* currentItem = firstItem;
     AsteroidListItem* closestItem = nullptr;
     
     while(currentItem != nullptr){
         dx = (currentItem->getData().getCurrentHitbox().left+ currentItem->getData().getCurrentHitbox().width/2) - 10000;
-        dy = (17999) - (currentItem->getData().getCurrentHitbox().top + currentItem->getData().getCurrentHitbox().height/2);
+        dy = (18000) - (currentItem->getData().getCurrentHitbox().top + currentItem->getData().getCurrentHitbox().height/2);
         dxy = sqrt( pow(dx,2) + pow(dy,2));
         if(dxy < smallest){
             smallest = dxy;
@@ -71,7 +184,6 @@ void MyAIData::removeDestroyedFromArray(AsteroidListItem* firstItem){
         for(int i=0;i<10;i++){
             if(currentItem->getData().getID() == rocksInRange[i][0]){
                 rocksInRange[i][2] = 1;
-                //rocksInRange[i][3] = findAngle(currentItem);
             }
         }
         currentItem = currentItem->getNext();
@@ -127,7 +239,7 @@ AsteroidListItem* MyAIData::findWillHit(AsteroidListItem* firstItem){
             if(dx <= 11000+boxL && dx >= 9000-boxL && dy <= 20000 && dy >= 18000-boxH ){
                 numWillHit++;
 
-                //
+                //make sure it doesn't overwrite array elements
                 if(numWillHit <= 10){
                     for(int i=0;i<10;i++){
                         if(rocksInRange[i][0] == currentItem->getData().getID()) //already exists
@@ -202,126 +314,4 @@ int MyAIData::findAngle(AsteroidListItem* fireItem){
     }
 
     return angleRight;
-}
-
-
-/* GameAI suggestAction
- * determines the action the ship should take (rotate, fire)
- * - uses play data to determine move to make
-*/
-SuggestedAction GameAI::suggestAction(const ShipState& ship_state) {
-        bool usingSaved = false;
-        bool aim = false;
-        int angleLeft = 0;
-        int leastNumShots = 1000;
-        int numShotsPerRock = 0;
-        int buffer = 1500;
-
-        AsteroidListItem* currentItem = asteroidsObserver().asteroids().begin();
-        AsteroidListItem* closestItem = nullptr;
-        AsteroidListItem* willHitItem = nullptr;
-        AsteroidListItem* fireItem = nullptr;
-        
-        //find closest item that will hit ship and the closest item to the ship
-        willHitItem = my_game_ai->findWillHit(currentItem);
-        closestItem = my_game_ai->findClosest(currentItem);
-
-        //clears the debug window
-	    debug_rt->clear(sf::Color::Transparent);
-        
-        //when there exists 3 or more rocks that are bound to hit ship, use data from array
-        if(my_game_ai->numWillHit > 2){
-            usingSaved = true;
-        } else {
-            //priority of items to fire at as follows
-            // 1. shoot at item that will hit ship, if not existent,
-            // 2. shoot at item that is closest to ship
-            if (willHitItem != nullptr){
-                fireItem = willHitItem;
-                aim=true;
-            } else if (closestItem != nullptr){
-                fireItem = closestItem;
-                aim=true;
-            }             
-        }
-
-        //when using the data from array to determine move
-        if(usingSaved){
-
-            //allows each rock to be shot at 3 times before moving onto next
-            numShotsPerRock = 3; 
-            if(my_game_ai->rockSize == 300) {
-               // if(my_game_ai->numSmallRocks > 3){
-              //      numShotsPerRock = 2;
-              //  }
-                if(my_game_ai->numShots == numShotsPerRock){
-                    my_game_ai->numShots = 0;
-                    buffer = 1000;
-                }
-            } else {
-               // cout << my_game_ai->rockSize << endl;
-                if(my_game_ai->numShots == numShotsPerRock){
-                    my_game_ai->numShots = 0;
-                }
-            }
-
-            //determines the index within array storing rocks that will hit ship
-            //finds the rock which has been shot at the least
-            my_game_ai->numSmallRocks = 0; 
-            if(my_game_ai->numShots == 0){                
-                for(int i=0;i<10;i++){
-                    if(my_game_ai->rocksInRange[i][4] == 300)
-                        my_game_ai->numSmallRocks++;
-                   // cout << my_game_ai->rocksInRange[i][0] << ":" << my_game_ai->rocksInRange[i][1]<<":" << my_game_ai->rocksInRange[i][3]<<":" << my_game_ai->rocksInRange[i][4]<< "..." <<endl; 
-                    if(my_game_ai->rocksInRange[i][0] != 0  
-                            && my_game_ai->rocksInRange[i][0] != my_game_ai->lastId 
-                            && my_game_ai->rocksInRange[i][1] < leastNumShots){
-                        
-                        my_game_ai->prevIndex = i;
-                        leastNumShots = my_game_ai->rocksInRange[i][1];
-                    }
-                }
-              //  cout << "fire at " <<  my_game_ai->rocksInRange[my_game_ai->prevIndex][0] << endl;
-            }
-            
-            //update the angleRight (used in current round) and rockSize (used in next round)
-            my_game_ai->angleRight = my_game_ai->rocksInRange[my_game_ai->prevIndex][3];
-            my_game_ai->rockSize = my_game_ai->rocksInRange[my_game_ai->prevIndex][4];
-            
-            //increments 'times shot at' when ship actually fires a rock towards the intended target
-            if(ship_state.frames_until_phaser_is_ready == 1 
-                    && ship_state.millidegree_rotation >= my_game_ai->angleRight-1500 
-                    && ship_state.millidegree_rotation <= my_game_ai->angleRight+1500){
-                my_game_ai->numShots++;
-                my_game_ai->lastId = my_game_ai->rocksInRange[my_game_ai->prevIndex][0];
-                my_game_ai->rocksInRange[my_game_ai->prevIndex][1]++;
-            }
-            
-        //when array not being used (less than 3 rocks going towards ship)
-        } else if (aim) {
-            my_game_ai->angleRight = my_game_ai->findAngle(fireItem);
-            my_game_ai->rockSize = fireItem->getData().getMass();
-        }
-
-        //determine shooting angle range (alowing for juttering)
-        if(aim || usingSaved){
-            angleLeft = my_game_ai->angleRight - buffer;
-            my_game_ai->angleRight = my_game_ai->angleRight + buffer;
-        } else {
-            angleLeft = -45000;
-            my_game_ai->angleRight = 45000;
-        }
-
-        // allows for spraying pattern to go around targeted angle range
-        if (ship_state.millidegree_rotation <= angleLeft) {
-            my_game_ai->ccw=false;
-        } else if (ship_state.millidegree_rotation >= my_game_ai->angleRight) {
-            my_game_ai->ccw=true;
-        }
-       
-        if(my_game_ai->ccw) {
-            return SuggestedAction{ SuggestedAction::YawingAntiClockwise, SuggestedAction::FiringTry };
-        } else {
-            return SuggestedAction{ SuggestedAction::YawingClockwise, SuggestedAction::FiringTry };
-        }
 }

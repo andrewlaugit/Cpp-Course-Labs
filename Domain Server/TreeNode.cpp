@@ -1,3 +1,8 @@
+// Andrew Lau
+// TreeNode.cpp
+// November 23, 2018
+// Version 1.0
+
 #include "TreeNode.h"
 
 // A useful constructor

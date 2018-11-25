@@ -1,9 +1,13 @@
 // Andrew Lau
+// TreeDB.cpp
 // November 24, 2018
 // Version 1.0
 
 //implementation file for TreeDB.h functions
+
 #include "TreeDB.h"
+#include "TreeNode.h"
+#include "DBentry.h"
 #include <iostream>
 
 //***************** all functions implemented in order as listed in header file ***************************
@@ -201,7 +205,7 @@ void TreeDB::clear(){
     
 // prints the number of probes stored in probesCount
 void TreeDB::printProbes() const {
-    cout << probesCount;
+    cout << probesCount << endl;
 }
    
 /* computes and prints out the total number of active entries
@@ -209,7 +213,7 @@ void TreeDB::printProbes() const {
  * calls helper function to recursively count active entries
  */
 void TreeDB::countActive () const {
-    cout << findNumActive(root);
+    cout << findNumActive(root) << endl;
 }
 
 // Prints the entire tree, in ascending order of key/name
@@ -221,7 +225,7 @@ ostream& operator<< (ostream& out, const TreeDB& rhs) {
  * leftmost to rightmost entries
  * helper function to operator<<TreeDB
  */
-ostream& operator<< (ostream& out, TreeNode* rhs){
+ostream& operator<< (ostream& out, const TreeNode* rhs){
     if(rhs == nullptr){
         return out;
     } else {

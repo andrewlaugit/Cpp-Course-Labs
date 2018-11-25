@@ -5,14 +5,21 @@
 
 #include "TreeNode.h"
 
-// A useful constructor
+/* constructor for TreeNode
+ * sets left and right children to nullptr
+ * sets data pointer to paramter _entryPtr
+ */
 TreeNode::TreeNode(DBentry* _entryPtr){
     entryPtr = _entryPtr;
     left =  nullptr;
     right =  nullptr;
 }
 
-// the destructor
+/* destructor for TreeNode
+ * implements a recursive destructor
+ * attempts to deallocate all memory in current node's data
+ * then attempts to deallocate all memory in left and right children
+ */
 TreeNode::~TreeNode(){
     if(entryPtr != nullptr){
         delete entryPtr;
@@ -25,12 +32,12 @@ TreeNode::~TreeNode(){
     }
 }
 
-// sets the left child of the TreeNode.
+// sets the left child of the TreeNode to newLeft
 void TreeNode::setLeft(TreeNode* newLeft){
     left = newLeft;
 }
 
-// sets the right child of the TreeNode
+// sets the right child of the TreeNode to newRight
 void TreeNode::setRight(TreeNode* newRight){
     right = newRight;
 }

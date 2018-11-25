@@ -13,8 +13,8 @@
 
 using namespace std;
 
-//forward declarations
-
+//******************** forward declarations ******************************
+//command functions
 void insertEntry(stringstream& lstream, TreeDB* serverPtr);
 void findEntry(stringstream& lstream, TreeDB* serverPtr);
 void removeEntry(stringstream& lstream, TreeDB* serverPtr);
@@ -29,6 +29,10 @@ void printSuccess();
 void printEntryDNE();
 void printEntryExists();
 
+/* main function
+ * repetitively prompts for input until eof inputted <CTRL+D>
+ * reads the command from the input and calls the appropriate function
+ */
 int main(){
     string line;
     string command;
@@ -41,6 +45,7 @@ int main(){
     while(!cin.eof()){
         stringstream linestream(line);
         linestream >> command;
+
         if(!linestream.fail()){
             if(command == "insert"){
                 insertEntry(linestream, serverPtr);
@@ -64,9 +69,15 @@ int main(){
         cout << "> ";
         getline(cin, line);
     }
+
     return 0;
 }
 
+/* insertEntry function
+ * reads the name, IP adress, and status of the entry
+ * adds the entry to the database tree and prints success message
+ * if entry already exists, print error message
+ */
 void insertEntry(stringstream& lstream, TreeDB* serverPtr){
     DBentry* entryPtr;
     string name;
@@ -88,6 +99,11 @@ void insertEntry(stringstream& lstream, TreeDB* serverPtr){
     }
 }
 
+/* findEntry function
+ * reads the name of the entry and attempts to find it
+ * if entry is found, its details are printed
+ * if not found, error message printed
+ */
 void findEntry(stringstream& lstream, TreeDB* serverPtr){
     DBentry* entryPtr;
     string name;
@@ -102,6 +118,11 @@ void findEntry(stringstream& lstream, TreeDB* serverPtr){
     }
 }
 
+/* removeEntry function
+ * reads the name of the entry and attempts to remove it
+ * if entry is found, it is deleted and success printed
+ * if not found, error message is printed
+ */
 void removeEntry(stringstream& lstream, TreeDB* serverPtr){
     string name;
 
@@ -114,10 +135,18 @@ void removeEntry(stringstream& lstream, TreeDB* serverPtr){
     }
 }
 
+/* printAllEntries function
+ * prints all the entries in the database tree in alpha order
+ */
 void printAllEntries(TreeDB* serverPtr){
     cout << *serverPtr;
 }
 
+/* printProbe function
+ * reads the name of the entry and attempts to find it
+ * if found, number of nodes visited to reach entry is printed
+ * if not found, error message printed
+ */
 void printProbe(stringstream& lstream, TreeDB* serverPtr){
     DBentry* entryPtr;
     string name;
@@ -132,15 +161,26 @@ void printProbe(stringstream& lstream, TreeDB* serverPtr){
     }
 }
 
+/* removeAllEntries function
+ * clears the database tree of all entries, prints success once done
+ */
 void removeAllEntries(TreeDB* serverPtr){
     serverPtr->clear();
     printSuccess();
 }
 
+/* countActiveEntries function
+ * prints out the total number of active entries in the database tree
+ */
 void countActiveEntries(TreeDB* serverPtr){
     serverPtr->countActive();
 }
 
+/* updateStatus function
+ * reads the name from the input and attempts to find it,
+ * if found, the status of the entry is updated as inputted
+ * if not found, error message printed
+ */
 void updateStatus(stringstream& lstream, TreeDB* serverPtr){
     DBentry* entryPtr;
     bool active;
@@ -158,6 +198,11 @@ void updateStatus(stringstream& lstream, TreeDB* serverPtr){
     }
 }
 
+/* statusFromStream function
+ * takes in a stringstream and reads status
+ * if active inputted, returns true
+ * if inactive inputted, returns false
+ */
 bool statusFromStream(stringstream& lstream){
     string statusString;
     lstream >> statusString;
@@ -168,14 +213,17 @@ bool statusFromStream(stringstream& lstream){
     }
 }
 
+//prints success message
 void printSuccess(){
     cout << "Success" << endl;
 }
 
+//prints entry does not exist error message
 void printEntryDNE(){
     cout << "Error: entry does not exist" << endl;
 }
 
+//prints entry already exists error message
 void printEntryExists(){
     cout << "Error: entry already exists" << endl;
 }

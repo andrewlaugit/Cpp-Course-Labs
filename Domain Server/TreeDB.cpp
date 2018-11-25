@@ -12,34 +12,40 @@
 
 //***************** all functions implemented in order as listed in header file ***************************
 
-// the default constructor, creates an empty database.
+/* the default constructor
+ * creates an empty database
+ */
 TreeDB::TreeDB(){
     root = nullptr;
     probesCount = 0;
 }
 
-// the destructor, deletes all the entries in the database.
+/* the destructor
+ * deletes all the entries in the database.
+ */
 TreeDB::~TreeDB(){
     if(root != nullptr){
-        delete root; //will invoke TreeNode destructor
+        delete root; //invoke TreeNode destructor sequence
     }
 }
 
-/* finds the number of active entries in db
+/* findNumActive function
+ * finds the number of active entries in db
  * used as a helper funciton to countActive function
  * recursively implemented by adding up active entries in parent, leftchild and right child
  */ 
 int TreeDB::findNumActive(TreeNode* root) const {
     if(root == nullptr){ //base case when nullptr reached
         return 0;
-    } else if(root->getEntry()->getActive()){
+    } else if(root->getEntry()->getActive()){ //active node
         return 1 + findNumActive(root->getLeft()) + findNumActive(root->getRight());
-    } else {
+    } else { //inactive node
         return 0 + findNumActive(root->getLeft()) + findNumActive(root->getRight());
     }
 } 
 
-/* inserts the entry pointed to by newEntry into the database. 
+/* insert function
+ * inserts the entry pointed to by newEntry into the database. 
  * If an entry with the same key as newEntry's exists 
  * in the database, it returns false. Otherwise, it returns true.
  */
@@ -47,11 +53,13 @@ bool TreeDB::insert(DBentry* newEntry){
     TreeNode* currentNode = root;
     TreeNode* newEntryNode = new TreeNode(newEntry);
 
+    //if empty tree
     if(root == nullptr){
         root = newEntryNode;
         return true;
     }
     
+    //repeat until whole tree has been searched
     while(currentNode != nullptr){
         if(newEntry->getName() == currentNode->getEntry()->getName()){ //already in tree
             delete newEntryNode; //prevent memory leaks
@@ -79,7 +87,7 @@ bool TreeDB::insert(DBentry* newEntry){
 /* searches the database for an entry with a key equal to name.
  * If the entry is found, a pointer to it is returned.
  * If the entry is not found, the NULL pointer is returned.
- * Also sets probesCount
+ * Increments probesCount each time a new node is visited before entry is found
  */
 DBentry* TreeDB::find(string name){
     TreeNode* currentNode = root;
@@ -105,13 +113,10 @@ DBentry* TreeDB::find(string name){
     return nullptr; //not found
 }
 
-/* deletes the entry with the specified name (key)  from the database.
- * If the entry was indeed in the database, it returns true.
- * Returns false otherwise.
- * See section 6 of the lab handout for the *required* removal method.
- * If you do not use that removal method (replace deleted node by
- * maximum node in the left subtree when the deleted node has two children)
- * you will not match exercise's output.
+/* remove function
+ * Deletes the entry with the specified name (key) from the database
+ * If entry is found, it is deallocated and return true. If not found, return false
+ * Replaces deleted node with a) greatest key on left subtree or b) smallest key on right subtree
  */
 bool TreeDB::remove(string name){
     TreeNode* deleteNode = root;
@@ -137,13 +142,13 @@ bool TreeDB::remove(string name){
         } 
     }
 
-    if(!found){ //not found and done with remove
+    if(!found){ //not found (done with remove)
         return false;
     }
      
-    // lab specifies to replace deleted node with greatest key on left subtree
+    // replace deleted node with greatest key on left subtree
     // after finding replacement node, temporarily remove node from tree and
-    // preserve tree structure
+    // preserve tree structure (rebuild tree without replacementNode)
     if(deleteNode->getLeft() != nullptr) {
         replacementNode = deleteNode->getLeft();
         replacementParentNode = replacementNode;
@@ -177,7 +182,7 @@ bool TreeDB::remove(string name){
         }
     }
 
-    //***** if replacementNode is nullptr after checking left and right *******
+    //***** if replacementNode is nullptr after checking left and right     *******
     //***** the delete node has no children, and thus can simply be deleted *******
     
     if(parentNode == deleteNode){ //when deleting the root
@@ -198,16 +203,17 @@ bool TreeDB::remove(string name){
         }
     }
     
-    //remove all connections to deleteNode
+    //remove all of deleteNode's connections to nodes in the tree
     deleteNode->setLeft(nullptr);
     deleteNode->setRight(nullptr);
     
     delete deleteNode;
     return true;
 }
-	
-// deletes all the entries in the database.
-// delete the whole tree
+
+/* clear function
+ * deletes all entries in the database
+ */	
 void TreeDB::clear(){
     if(root != nullptr){
         delete root;
@@ -215,27 +221,31 @@ void TreeDB::clear(){
     }
 }
     
-// prints the number of probes stored in probesCount
+/* printProbes function
+ * outputs the number of probes stroed in probesCount
+ */	
 void TreeDB::printProbes() const {
     cout << probesCount << endl;
 }
    
-/* computes and prints out the total number of active entries
- * in the database (i.e. entries with active==true)
- * calls helper function to recursively count active entries
+/* countActive function
+ * Computes and prints out the total number of active entries in the database
+ * calls helper function findNumActive() to recursively count active entries
  */
 void TreeDB::countActive () const {
     cout << findNumActive(root) << endl;
 }
 
-// Prints the entire tree, in ascending order of key/name
+/* overloaded operator<< for TreeDB objects
+ * Prints the entire tree, in ascending order of key/name
+ */
 ostream& operator<< (ostream& out, const TreeDB& rhs) {
     return out << rhs.root;
 }
 
-/* recursively adds entries to the output stream, starting from 
- * leftmost to rightmost entries
- * helper function to operator<<TreeDB
+/* overloaded operator<< for TreeNode pointers
+ * Prints left child's entries, current node's entries, then right child's entries
+ * Recursively adds entries to the output stream, from leftmost to rightmost
  */
 ostream& operator<< (ostream& out, TreeNode* rhs){
     if(rhs == nullptr){

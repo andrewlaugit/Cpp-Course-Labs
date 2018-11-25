@@ -140,7 +140,7 @@ bool TreeDB::remove(string name){
     if(!found){ //not found and done with remove
         return false;
     }
- 
+     
     // lab specifies to replace deleted node with greatest key on left subtree
     // after finding replacement node, temporarily remove node from tree and
     // preserve tree structure
@@ -187,10 +187,21 @@ bool TreeDB::remove(string name){
     } else { //parentNode->getRight() == deleteNode) >> deleting right child of parent
         parentNode->setRight(replacementNode);
     }
-
+    
     //reconnect deleteNode's children with tree
-    replacementNode->setLeft(deleteNode->getLeft());
-    replacementNode->setRight(deleteNode->getRight());
+    if(replacementNode != nullptr){
+        if(replacementNode != deleteNode->getLeft()){
+            replacementNode->setLeft(deleteNode->getLeft());
+        } 
+        if(replacementNode != deleteNode->getRight()){
+            replacementNode->setRight(deleteNode->getRight());
+        }
+    }
+    
+    //remove all connections to deleteNode
+    deleteNode->setLeft(nullptr);
+    deleteNode->setRight(nullptr);
+    
     delete deleteNode;
     return true;
 }
@@ -200,6 +211,7 @@ bool TreeDB::remove(string name){
 void TreeDB::clear(){
     if(root != nullptr){
         delete root;
+        root = nullptr;
     }
 }
     
@@ -225,10 +237,10 @@ ostream& operator<< (ostream& out, const TreeDB& rhs) {
  * leftmost to rightmost entries
  * helper function to operator<<TreeDB
  */
-ostream& operator<< (ostream& out, const TreeNode* rhs){
+ostream& operator<< (ostream& out, TreeNode* rhs){
     if(rhs == nullptr){
         return out;
     } else {
-        return out << rhs->getLeft() << rhs->getEntry() << rhs->getRight(); 
+        return out << rhs->getLeft() << *(rhs->getEntry()) << rhs->getRight(); 
     }
 }

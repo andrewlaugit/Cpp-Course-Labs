@@ -15,7 +15,6 @@ using namespace std;
 
 //forward declarations
 
-//
 void insertEntry(stringstream& lstream, TreeDB* serverPtr);
 void findEntry(stringstream& lstream, TreeDB* serverPtr);
 void removeEntry(stringstream& lstream, TreeDB* serverPtr);
@@ -61,6 +60,9 @@ int main(){
                 updateStatus(linestream, serverPtr);    
             }
         }
+        
+        cout << "> ";
+        getline(cin, line);
     }
     return 0;
 }
@@ -94,7 +96,7 @@ void findEntry(stringstream& lstream, TreeDB* serverPtr){
     entryPtr = serverPtr->find(name);
 
     if(entryPtr != nullptr){
-        cout << entryPtr;
+        cout << *entryPtr;
     } else {
         printEntryDNE();
     }
@@ -147,7 +149,7 @@ void updateStatus(stringstream& lstream, TreeDB* serverPtr){
     lstream >> name;
     
     entryPtr = serverPtr->find(name);
-    if(entryPtr = nullptr){
+    if(entryPtr == nullptr){
         printEntryDNE();
     } else {
         active = statusFromStream(lstream);

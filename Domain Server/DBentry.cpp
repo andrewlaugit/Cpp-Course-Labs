@@ -25,6 +25,11 @@ DBentry::DBentry(string _name, unsigned int _IPaddress, bool _active){
     active = _active;
 }
 
+//destructor
+DBentry::~DBentry(){
+    //nothing needs to be done, nothing dynamically allocated
+}
+
 // sets the domain name, which we will use as a key.
 void DBentry::setName(string _name){
     name = _name;

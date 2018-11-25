@@ -16,7 +16,13 @@ using namespace std;
 //forward declarations
 
 //
-
+void insertEntry(stringstream& lstream, TreeDB* serverPtr);
+void findEntry(stringstream& lstream, TreeDB* serverPtr);
+void removeEntry(stringstream& lstream, TreeDB* serverPtr);
+void printAllEntries(TreeDB* serverPtr);
+void printProbe(stringstream& lstream, TreeDB* serverPtr);
+void removeAllEntries(TreeDB* serverPtr);
+void countActiveEntries(TreeDB* serverPtr);
 void updateStatus(stringstream& lstream, TreeDB* serverPtr);
 bool statusFromStream(stringstream& lstream);
 //status messages

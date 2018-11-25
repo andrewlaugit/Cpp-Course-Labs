@@ -33,11 +33,11 @@ struct MyAIData {
 
     /* holds up to 10 different rocks 
     * values stored:
-    * ID - unique id of the rock to ensure no duplicates
-    * Shots taken at - keeps track of number of shots the rock has been shot at
-    * Still on board? - 1 if still in play, 0 if not on board anymore
-    * angle right - the angle needed to hit rock
-    * size/mass - the value of the mass of the rock 
+    * 0 : ID - unique id of the rock to ensure no duplicates
+    * 1 : Shots taken at - keeps track of number of shots the rock has been shot at
+    * 2 : Still on board? - 1 if still in play, 0 if not on board anymore
+    * 3 : angle right - the angle needed to hit rock
+    * 4 : size/mass - the value of the mass of the rock 
     */
     int rocksInRange[10][5];
     
